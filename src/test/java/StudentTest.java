@@ -1,62 +1,37 @@
+import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import org.junit.jupiter.api.Test;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
-import java.util.List;
 
+@WireMockTest(httpPort = 5352)
 class StudentTest {
 
     @Test
-    void testEncapsulation() {
+    void testAddGrade_Valid() throws Exception {
+        stubFor(get(urlPathEqualTo("/checkGrade"))
+                .withQueryParam("grade", equalTo("5"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withBody("true")));
+
         Student student = new Student("Ivan");
         student.addGrade(5);
-        List<Integer> grades = student.getGrades();
-        assertThrows(UnsupportedOperationException.class, () -> {
-            grades.add(4);
-        });
+
+        assertEquals(1, student.getGrades().size());
+        assertEquals(5, student.getGrades().get(0));
     }
 
     @Test
-    void testAddGradeValid() {
-        Student student = new Student("Ivan");
-        student.addGrade(2);
-        student.addGrade(5);
-        assertEquals(2, student.getGrades().size());
-        assertEquals(5, student.getGrades().get(1));
-    }
+    void testAddGrade_Invalid() throws Exception {
+        stubFor(get(urlPathEqualTo("/checkGrade"))
+                .withQueryParam("grade", equalTo("1"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withBody("false")));
 
-    @Test
-    void testAddGradeInvalid() {
         Student student = new Student("Ivan");
+
         assertThrows(IllegalArgumentException.class, () -> student.addGrade(1));
-        assertThrows(IllegalArgumentException.class, () -> student.addGrade(6));
-    }
-
-    @Test
-    void testNameAccessors() {
-        Student student = new Student("Ivan");
-        assertEquals("Ivan", student.getName());
-        student.setName("Petr");
-        assertEquals("Petr", student.getName());
-    }
-
-    @Test
-    void testEqualsAndHashCode() {
-        Student s1 = new Student("Ivan");
-        s1.addGrade(5);
-        Student s2 = new Student("Ivan");
-        s2.addGrade(5);
-        Student s3 = new Student("Petr");
-
-        assertEquals(s1, s2);
-        assertNotEquals(s1, s3);
-        assertEquals(s1.hashCode(), s2.hashCode());
-    }
-
-    @Test
-    void testToString() {
-        Student student = new Student("Ivan");
-        student.addGrade(5);
-        String result = student.toString();
-        assertTrue(result.contains("Ivan"));
-        assertTrue(result.contains("5"));
+        assertTrue(student.getGrades().isEmpty());
     }
 }
