@@ -4,32 +4,36 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class PobedaSearchTest {
+public class PobedaManageTest {
     private WebDriver driver;
-    private PobedaSearchPage page;
+    private PobedaManagePage page;
 
     @BeforeEach
     public void setUp() {
         driver = new ChromeDriver();
         driver.manage().window().maximize();
         driver.get("https://www.pobeda.aero");
-        page = new PobedaSearchPage(driver);
+        page = new PobedaManagePage(driver);
     }
 
     @Test
-    public void testSearchValidation() {
+    public void testOrderSearchError() {
         assertEquals("Авиакомпания «Победа» - купить билеты на самолёт дешево онлайн, прямые и трансферные рейсы", page.getTitle());
         assertTrue(page.isLogoDisplayed());
 
-        page.scrollToSearch();
-        page.enterRoute("Москва", "Санкт-Петербург");
-        page.submitSearch();
+        page.openManageBooking();
+        assertTrue(page.areFieldsVisible());
 
-        assertTrue(page.isDateRed());
+        page.searchOrder("XXXXXX", "Qwerty");
+        page.switchToNewTab();
+
+        assertTrue(page.getErrorMessage().contains("Заказ с указанными параметрами не найден"));
     }
 
     @AfterEach
     public void tearDown() {
-        if (driver != null) driver.quit();
+        if (driver != null) {
+            driver.quit();
+        }
     }
 }
